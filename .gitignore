@@ -1,0 +1,19 @@
+# сырые данные CICIDS2017 (~1.2 ГБ)
+**/data/TL/
+
+# тяжёлые производные артефакты (в любом каталоге)
+*.parquet
+*.npz
+*.feather
+
+# python / инструменты
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+*.log

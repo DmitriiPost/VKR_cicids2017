@@ -1,0 +1,5 @@
+label,n_groups
+BENIGN | PortScan,564
+BENIGN | DoS Hulk,129
+BENIGN | DDoS,3
+BENIGN | DoS slowloris,1

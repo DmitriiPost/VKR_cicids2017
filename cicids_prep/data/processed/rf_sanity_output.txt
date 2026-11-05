@@ -1,0 +1,54 @@
+
+=== random_full: accuracy 0.9954, macro-F1 0.8126 ===
+                            n_test      P      R     F1
+BENIGN                      314404  1.000  0.995  0.997
+Bot                            293  0.403  0.980  0.571
+DDoS                         19202  0.996  0.999  0.997
+DoS GoldenEye                 1543  0.945  0.997  0.970
+DoS Hulk                     25908  0.978  0.998  0.988
+DoS Slowhttptest               784  0.894  0.994  0.941
+DoS slowloris                  808  0.972  0.994  0.983
+FTP-Patator                    890  0.950  1.000  0.974
+Heartbleed                       1  0.333  1.000  0.500
+Infiltration                     5  0.444  0.800  0.571
+PortScan                     13538  0.994  0.999  0.997
+SSH-Patator                    483  0.925  0.996  0.959
+Web Attack - Brute Force       221  0.595  0.805  0.685
+Web Attack - Sql Injection       3  1.000  0.667  0.800
+Web Attack - XSS                98  0.245  0.265  0.255
+
+=== time_full: accuracy 0.9724, macro-F1 0.6642 ===
+                            n_test      P      R     F1
+BENIGN                      308122  0.991  0.985  0.988
+Bot                            287  0.000  0.000  0.000
+DDoS                         14045  0.785  0.996  0.878
+DoS GoldenEye                  776  0.812  1.000  0.896
+DoS Hulk                     14090  0.967  0.730  0.832
+DoS Slowhttptest                76  0.169  0.697  0.272
+DoS slowloris                  706  0.946  0.371  0.533
+FTP-Patator                    787  0.952  0.991  0.971
+Heartbleed                       2  1.000  0.500  0.667
+Infiltration                     4  0.667  0.500  0.571
+PortScan                      8359  0.845  0.992  0.913
+SSH-Patator                    457  0.939  0.917  0.928
+Web Attack - Brute Force       193  0.644  0.741  0.689
+Web Attack - Sql Injection       5  0.750  0.600  0.667
+Web Attack - XSS                54  0.113  0.259  0.157
+
+F1 по классам:
+                             random_full  time_full
+BENIGN                            0.997      0.988
+Bot                               0.571      0.000
+DDoS                              0.997      0.878
+DoS GoldenEye                     0.970      0.896
+DoS Hulk                          0.988      0.832
+DoS Slowhttptest                  0.941      0.272
+DoS slowloris                     0.983      0.533
+FTP-Patator                       0.974      0.971
+Heartbleed                        0.500      0.667
+Infiltration                      0.571      0.571
+PortScan                          0.997      0.913
+SSH-Patator                       0.959      0.928
+Web Attack - Brute Force          0.685      0.689
+Web Attack - Sql Injection        0.800      0.667
+Web Attack - XSS                  0.255      0.157

@@ -1,0 +1,16 @@
+label,n,extra_dups,unique_after_dedup,dup_share_%
+BENIGN,2273097,176383,2096714,7.76
+DoS Hulk,231073,58224,172849,25.2
+PortScan,158930,68111,90819,42.86
+DDoS,128027,11,128016,0.01
+DoS GoldenEye,10293,7,10286,0.07
+FTP-Patator,7938,2005,5933,25.26
+SSH-Patator,5897,2678,3219,45.41
+DoS slowloris,5796,411,5385,7.09
+DoS Slowhttptest,5499,271,5228,4.93
+Bot,1966,13,1953,0.66
+Web Attack - Brute Force,1507,37,1470,2.46
+Web Attack - XSS,652,0,652,0.0
+Infiltration,36,0,36,0.0
+Web Attack - Sql Injection,21,0,21,0.0
+Heartbleed,11,0,11,0.0

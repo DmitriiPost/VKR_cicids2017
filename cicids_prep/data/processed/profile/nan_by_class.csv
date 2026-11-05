@@ -1,0 +1,16 @@
+label,n,rows_with_nan,share_%
+BENIGN,2273097,4508,0.198
+Bot,1966,10,0.509
+DDoS,128027,21,0.016
+DoS GoldenEye,10293,5,0.049
+DoS Hulk,231073,1108,0.48
+DoS Slowhttptest,5499,0,0.0
+DoS slowloris,5796,0,0.0
+FTP-Patator,7938,7,0.088
+Heartbleed,11,4,36.364
+Infiltration,36,1,2.778
+PortScan,158930,126,0.079
+SSH-Patator,5897,2,0.034
+Web Attack - Brute Force,1507,0,0.0
+Web Attack - Sql Injection,21,0,0.0
+Web Attack - XSS,652,0,0.0
