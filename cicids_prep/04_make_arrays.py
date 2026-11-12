@@ -11,6 +11,8 @@
   6. метки: full (15 классов) | merge_web (Web Attack x3 -> один класс) | binary (BENIGN=0, атака=1);
   7. train-подвыборка: не более --train-cap потоков на класс (случайно, seed); val/test в естественном распределении.
 
+Сама логика предобработки лежит в prep_common.py.
+
 Выход: <out>.npz (X_train,y_train,X_val,y_val,X_test,y_test, flow_id_*, feature_names, class_names)
        <out>.json (параметры предобработки, чтобы повторить на новых данных)
 
@@ -21,26 +23,7 @@
 import argparse, json
 import numpy as np
 import pandas as pd
-
-META = ["flow_id", "day", "row_in_file", "ts", "src_ip", "dst_ip", "src_port", "protocol", "label", "row_hash", "feat_hash"]
-
-
-def encode_labels(lab: pd.Series, mode: str):
-    lab = lab.astype(str)
-    if mode == "binary":
-        names = ["BENIGN", "ATTACK"]
-        y = (lab != "BENIGN").astype("int64").to_numpy()
-    else:
-        if mode == "merge_web":
-            lab = lab.where(~lab.str.startswith("Web Attack"), "Web Attack")
-        names = ["BENIGN"] + sorted(l for l in lab.unique() if l != "BENIGN")
-        m = {n: i for i, n in enumerate(names)}
-        y = lab.map(m).to_numpy().astype("int64")
-    return y, names
-
-
-def slog(x):
-    return np.sign(x) * np.log1p(np.abs(x))
+from prep_common import (feature_columns, encode_labels, fit_preprocessor, apply_preprocessor, cap_indices)
 
 
 def main():
@@ -54,15 +37,8 @@ def main():
     ap.add_argument("--log-thr", type=float, default=1000.0)
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
-    rng = np.random.default_rng(a.seed)
 
-    allcols = pd.read_parquet(a.clean, columns=["flow_id"]).columns  # проверка доступа
-    import pyarrow.parquet as pq
-    schema_cols = pq.read_schema(a.clean).names
-    feats = [c for c in schema_cols if c not in META]
-    if not a.keep_dst_port:
-        feats = [c for c in feats if c != "Destination Port"]
-
+    feats = feature_columns(a.clean, a.keep_dst_port)
     df = pd.read_parquet(a.clean, columns=["flow_id", "label"] + feats)
     sp = pd.read_parquet(a.split)
     df = df.merge(sp, on="flow_id", how="inner")
@@ -70,64 +46,31 @@ def main():
     y_all, class_names = encode_labels(df["label"], a.labels)
     df["y"] = y_all
 
-    tr = df["split"] == "train"
-    # 2. константные на train
-    nun = df.loc[tr, feats].nunique(dropna=True)
-    const = nun[nun <= 1].index.tolist()
-    feats = [c for c in feats if c not in const]
-    # 3. медианы train
-    med = df.loc[tr, feats].median()
-    # 4. колонки для signed-log
-    mx = df.loc[tr, feats].abs().max()
-    logcols = mx[mx > a.log_thr].index.tolist()
+    tr = (df["split"] == "train").to_numpy()
+    P = fit_preprocessor(df.loc[tr], feats, a.log_thr)          # только train, до подвыборки
+    ytr_full = df.loc[tr, "y"].to_numpy()
+    keep = cap_indices(ytr_full, a.train_cap, a.seed)
+    dtr = df.loc[tr].iloc[keep]
 
-    def prep(block: pd.DataFrame) -> np.ndarray:
-        X = block[feats].fillna(med).to_numpy(dtype="float64")
-        for c in logcols:
-            j = feats.index(c)
-            X[:, j] = slog(X[:, j])
-        return X
-
-    Xtr_full = prep(df.loc[tr])
-    lo = Xtr_full.min(axis=0)
-    hi = Xtr_full.max(axis=0)
-    rngv = np.where(hi - lo > 0, hi - lo, 1.0)
-
-    def scale(X):
-        return np.clip((X - lo) / rngv, 0.0, 1.0).astype("float32")
-
-    out = {}
-    # train: подвыборка по классам
-    idx_tr = np.flatnonzero(tr.to_numpy())
-    ytr = df.loc[tr, "y"].to_numpy()
-    keep = []
-    for k in np.unique(ytr):
-        ii = np.flatnonzero(ytr == k)
-        if a.train_cap and len(ii) > a.train_cap:
-            ii = rng.choice(ii, a.train_cap, replace=False)
-        keep.append(ii)
-    keep = np.sort(np.concatenate(keep))
-    out["X_train"] = scale(Xtr_full[keep]); out["y_train"] = ytr[keep]
-    out["flow_id_train"] = df.loc[tr, "flow_id"].to_numpy()[keep]
-    del Xtr_full
+    out = {"X_train": apply_preprocessor(dtr, P), "y_train": dtr["y"].to_numpy(), "flow_id_train": dtr["flow_id"].to_numpy()}
     for s in ["val", "test"]:
-        m = df["split"] == s
-        out[f"X_{s}"] = scale(prep(df.loc[m]))
-        out[f"y_{s}"] = df.loc[m, "y"].to_numpy()
-        out[f"flow_id_{s}"] = df.loc[m, "flow_id"].to_numpy()
+        b = df[df["split"] == s]
+        out[f"X_{s}"] = apply_preprocessor(b, P)
+        out[f"y_{s}"] = b["y"].to_numpy()
+        out[f"flow_id_{s}"] = b["flow_id"].to_numpy()
 
-    np.savez_compressed(a.out + ".npz", **out, feature_names=np.array(feats), class_names=np.array(class_names))
-    params = {"labels": a.labels, "train_cap": a.train_cap, "seed": a.seed, "dropped_constant": const,
-              "dst_port_used": bool(a.keep_dst_port), "log_cols": logcols, "log_thr": a.log_thr,
-              "features": feats, "median": med.to_dict(), "min": dict(zip(feats, lo.tolist())),
-              "max": dict(zip(feats, hi.tolist())), "class_names": class_names}
+    feats2 = P["feats"]
+    np.savez_compressed(a.out + ".npz", **out, feature_names=np.array(feats2), class_names=np.array(class_names))
+    params = {"labels": a.labels, "train_cap": a.train_cap, "seed": a.seed, "dropped_constant": P["const"],
+              "dst_port_used": bool(a.keep_dst_port), "log_cols": P["logcols"], "log_thr": a.log_thr,
+              "features": feats2, "median": P["med"].to_dict(), "min": dict(zip(feats2, P["lo"].tolist())),
+              "max": dict(zip(feats2, P["hi"].tolist())), "class_names": class_names}
     json.dump(params, open(a.out + ".json", "w"), ensure_ascii=False, indent=1)
 
-    print(f"признаков: {len(feats)} (константных убрано {len(const)}; signed-log у {len(logcols)})")
+    print(f"признаков: {len(feats2)} (константных убрано {len(P['const'])}; signed-log у {len(P['logcols'])})")
     rows = []
     for k, n in enumerate(class_names):
-        rows.append([n] + [int((out[f'y_{s}'] == k).sum()) for s in ["train", "val", "test"]]
-                    + [int(((df['y'] == k) & tr).sum())])
+        rows.append([n] + [int((out[f'y_{s}'] == k).sum()) for s in ["train", "val", "test"]] + [int((ytr_full == k).sum())])
     print(pd.DataFrame(rows, columns=["класс", "train(подвыборка)", "val", "test", "train(до подвыборки)"]).to_string(index=False))
     for s in ["train", "val", "test"]:
         X = out[f"X_{s}"]

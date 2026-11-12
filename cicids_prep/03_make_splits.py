@@ -1,7 +1,8 @@
 """
 Этап 3. Разбиение train / val / test. Результат: parquet (flow_id, split) + таблица «класс x split».
 
-Протоколы:
+Протоколы (буквы A/C/F — метки из списка рассмотренных вариантов, см. processed/DATA_PREPARATION.md;
+B = A после удаления дубликатов, теперь это поведение по умолчанию; D (по IP) и E (по дням) отклонены):
   random  (A)  стратифицированное случайное по меткам. Сравнимо с литературой, но завышает оценки:
                почти одинаковые потоки одной атаки попадают и в train, и в test.
   time    (C)  ОСНОВНОЙ. Для каждой пары (день, метка) потоки упорядочены по времени (минутные корзины)
@@ -13,13 +14,16 @@
 
 Перед разбиением (флаги): удаление точных дубликатов (признаки+метка) и «конфликтных» потоков
 (одинаковые признаки, разные метки, их нельзя выучить).
+  --dedup-on model   искать дубликаты/конфликты по признакам модели (без Destination Port) вместо всех колонок;
+  --exclude-flow-ids удалить потоки из списка (например, подозрительные Bot/SSH из 07_bot_ssh_windows.py).
 
 Запуск:
   python 03_make_splits.py --clean data/processed/clean.parquet --protocol time --out data/processed/split_time.parquet
   python 03_make_splits.py ... --protocol random --out .../split_random.parquet
   python 03_make_splits.py ... --protocol lofo --holdout "DoS Hulk" "DoS GoldenEye" --out .../split_lofo_dos.parquet
 """
-import argparse
+import argparse, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -27,20 +31,44 @@ from sklearn.model_selection import train_test_split
 COLS = ["flow_id", "day", "ts", "row_in_file", "label", "row_hash", "feat_hash"]
 
 
-def prefilter(df, dedup, drop_conflicts):
+def model_feature_hash(clean_path):
+    """Хэш по ТЕМ ЖЕ признакам, что видит модель (без Destination Port; константы на хэш не влияют)."""
+    from prep_common import feature_columns
+    feats = feature_columns(clean_path, keep_dst_port=False)
+    f = pd.read_parquet(clean_path, columns=["flow_id"] + feats)
+    h = pd.util.hash_pandas_object(f[feats].fillna(-123456.789), index=False).astype("uint64")
+    return pd.DataFrame({"flow_id": f["flow_id"].to_numpy(), "model_hash": h.to_numpy()})
+
+
+def prefilter(df, dedup, drop_conflicts, dedup_on="all", clean_path=None, exclude_ids=None):
     n0 = len(df)
     info = {}
+    if exclude_ids is not None:
+        mask = df["flow_id"].isin(exclude_ids)
+        info["excluded_by_list"] = int(mask.sum())
+        df = df.loc[~mask]
+    if dedup_on == "model":
+        # дубликаты и конфликты считаем по признакам модели (без Destination Port):
+        # потоки, различавшиеся только портом, для модели одно и то же
+        mh = model_feature_hash(clean_path)
+        df = df.merge(mh, on="flow_id", how="left")
+        feat_key = "model_hash"
+        row_key = pd.util.hash_pandas_object(df[["model_hash", "label"]].astype({"label": str}), index=False)
+        df = df.assign(row_key=row_key.to_numpy())
+    else:
+        feat_key, row_key_name = "feat_hash", "row_hash"
+        df = df.assign(row_key=df["row_hash"])
     if drop_conflicts:
-        nl = df.groupby("feat_hash")["label"].transform("nunique")
+        nl = df.groupby(feat_key)["label"].transform("nunique")
         mask = nl > 1
         info["conflict_rows_dropped"] = int(mask.sum())
         df = df.loc[~mask]
     if dedup:
         df = df.sort_values(["ts", "row_in_file"])
-        dup = df.duplicated("row_hash", keep="first")
+        dup = df.duplicated("row_key", keep="first")
         info["duplicate_rows_dropped"] = int(dup.sum())
         df = df.loc[~dup]
-    print(f"prefilter: {n0} -> {len(df)}  {info}")
+    print(f"prefilter (dedup_on={dedup_on}): {n0} -> {len(df)}  {info}")
     return df
 
 
@@ -93,11 +121,18 @@ def main():
     ap.add_argument("--min-bins-for-gap", type=int, default=10, help="зазор ставится, только если у пары (день,класс) >= стольких корзин")
     ap.add_argument("--no-dedup", action="store_true")
     ap.add_argument("--keep-conflicts", action="store_true")
+    ap.add_argument("--dedup-on", choices=["all", "model"], default="all",
+                    help="all: дубликаты/конфликты по всем колонкам, включая Destination Port (по умолчанию, как раньше); "
+                         "model: по признакам, которые видит модель (без Destination Port)")
+    ap.add_argument("--exclude-flow-ids", default=None, help="parquet со столбцом flow_id: эти потоки удалить до разбиения")
     ap.add_argument("--holdout", nargs="*", default=[], help="для lofo: метки скрытого семейства")
     a = ap.parse_args()
 
     df = pd.read_parquet(a.clean, columns=COLS)
-    df = prefilter(df, not a.no_dedup, not a.keep_conflicts)
+    excl = None
+    if a.exclude_flow_ids:
+        excl = set(pd.read_parquet(a.exclude_flow_ids)["flow_id"].tolist())
+    df = prefilter(df, not a.no_dedup, not a.keep_conflicts, a.dedup_on, a.clean, excl)
 
     if a.protocol == "random":
         sp = split_random(df, a.train, a.val, a.seed)

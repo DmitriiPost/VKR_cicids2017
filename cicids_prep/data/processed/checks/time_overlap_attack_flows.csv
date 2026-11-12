@@ -1,0 +1,5 @@
+protocol,split,attack_flows,share_minute_has_any_train_flow_%,share_minute_has_train_BENIGN_%,share_minute_has_train_OTHER_attack_%
+time,val,54524,75.7,75.7,0.0
+time,test,39841,43.5,43.5,0.0
+random,val,63777,100.0,100.0,0.0
+random,test,63777,100.0,100.0,0.0

@@ -1,0 +1,13 @@
+protocol,scope,pair,overlap_minutes,overlap_intervals,flows_train_in_overlap,share_train_%,flows_val_in_overlap,share_val_%,flows_test_in_overlap,share_test_%
+time,все потоки (включая BENIGN),train & val,106,27,120374.0,6.83,88745.0,24.39,,
+time,все потоки (включая BENIGN),train & test,101,24,76800.0,4.36,,,29159.0,8.38
+time,все потоки (включая BENIGN),val & test,22,8,,,36188.0,9.95,11353.0,3.26
+time,только атаки,train & val,0,0,0.0,0.0,0.0,0.0,,
+time,только атаки,train & test,0,0,0.0,0.0,,,0.0,0.0
+time,только атаки,val & test,0,0,,,0.0,0.0,0.0,0.0
+random,все потоки (включая BENIGN),train & val,2450,5,1764835.0,100.0,378178.0,100.0,,
+random,все потоки (включая BENIGN),train & test,2449,5,1764834.0,100.0,,,378180.0,100.0
+random,все потоки (включая BENIGN),val & test,2449,5,,,378177.0,100.0,378180.0,100.0
+random,только атаки,train & val,402,65,297379.0,99.92,63768.0,99.99,,
+random,только атаки,train & test,402,64,297344.0,99.9,,,63768.0,99.99
+random,только атаки,val & test,367,52,,,63718.0,99.91,63719.0,99.91

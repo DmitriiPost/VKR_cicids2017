@@ -1,0 +1,57 @@
+day,label,split,start,end,flows
+friday,BENIGN,train,2017-07-07 08:59:00,2017-07-07 15:09:00,238594
+friday,Bot,train,2017-07-07 09:34:00,2017-07-07 11:18:00,979
+friday,Bot,val,2017-07-07 11:21:00,2017-07-07 12:09:00,204
+friday,Bot,test,2017-07-07 12:11:00,2017-07-07 12:59:00,204
+friday,PortScan,train,2017-07-07 13:05:00,2017-07-07 14:54:00,1210
+friday,PortScan,val,2017-07-07 14:56:00,2017-07-07 15:08:00,92
+friday,PortScan,test,2017-07-07 15:10:00,2017-07-07 15:23:00,185
+friday,BENIGN,val,2017-07-07 15:11:00,2017-07-07 16:04:00,50593
+friday,DDoS,train,2017-07-07 15:56:00,2017-07-07 16:09:00,88454
+friday,BENIGN,test,2017-07-07 16:06:00,2017-07-07 17:02:00,48675
+friday,DDoS,val,2017-07-07 16:11:00,2017-07-07 16:12:00,12848
+friday,DDoS,test,2017-07-07 16:14:00,2017-07-07 16:16:00,14045
+monday,BENIGN,train,2017-07-03 08:55:58,2017-07-03 14:02:59,321315
+monday,BENIGN,val,2017-07-03 14:04:00,2017-07-03 15:42:59,67463
+monday,BENIGN,test,2017-07-03 15:44:00,2017-07-03 17:01:34,68213
+thursday,BENIGN,train,2017-07-06 08:59:00,2017-07-06 15:03:00,228647
+thursday,Web Attack - Brute Force,train,2017-07-06 09:15:00,2017-07-06 09:47:00,1013
+thursday,Web Attack - Brute Force,val,2017-07-06 09:49:00,2017-07-06 09:53:00,189
+thursday,Web Attack - Brute Force,test,2017-07-06 09:55:00,2017-07-06 10:00:00,193
+thursday,Web Attack - XSS,train,2017-07-06 10:15:00,2017-07-06 10:29:00,466
+thursday,Web Attack - XSS,val,2017-07-06 10:31:00,2017-07-06 10:32:00,64
+thursday,Web Attack - XSS,test,2017-07-06 10:34:00,2017-07-06 10:35:00,54
+thursday,Web Attack - Sql Injection,train,2017-07-06 10:40:00,2017-07-06 10:41:00,16
+thursday,Web Attack - Sql Injection,test,2017-07-06 10:42:00,2017-07-06 10:42:00,5
+thursday,Infiltration,train,2017-07-06 14:19:00,2017-07-06 15:19:00,25
+thursday,BENIGN,val,2017-07-06 15:05:00,2017-07-06 15:48:00,47768
+thursday,Infiltration,val,2017-07-06 15:23:00,2017-07-06 15:33:00,5
+thursday,Infiltration,test,2017-07-06 15:39:00,2017-07-06 15:45:00,4
+thursday,BENIGN,test,2017-07-06 15:50:00,2017-07-06 17:04:00,47960
+tuesday,BENIGN,train,2017-07-04 08:53:00,2017-07-04 14:38:00,257664
+tuesday,FTP-Patator,train,2017-07-04 09:17:00,2017-07-04 10:01:00,4190
+tuesday,FTP-Patator,val,2017-07-04 10:03:00,2017-07-04 10:10:00,755
+tuesday,FTP-Patator,test,2017-07-04 10:12:00,2017-07-04 10:30:00,787
+tuesday,SSH-Patator,train,2017-07-04 14:09:00,2017-07-04 14:51:00,2274
+tuesday,BENIGN,val,2017-07-04 14:40:00,2017-07-04 15:56:00,53559
+tuesday,SSH-Patator,val,2017-07-04 14:53:00,2017-07-04 15:00:00,394
+tuesday,SSH-Patator,test,2017-07-04 15:02:00,2017-07-04 15:11:00,457
+tuesday,BENIGN,test,2017-07-04 15:58:00,2017-07-04 17:00:00,54694
+wednesday,BENIGN,train,2017-07-05 08:42:00,2017-07-05 14:36:00,257163
+wednesday,DoS slowloris,train,2017-07-05 09:01:00,2017-07-05 10:03:00,3828
+wednesday,DoS slowloris,val,2017-07-05 10:05:00,2017-07-05 10:06:00,465
+wednesday,DoS slowloris,test,2017-07-05 10:08:00,2017-07-05 14:24:00,705
+wednesday,DoS Slowhttptest,train,2017-07-05 10:15:00,2017-07-05 10:26:00,3976
+wednesday,DoS Slowhttptest,val,2017-07-05 10:28:00,2017-07-05 10:32:00,124
+wednesday,DoS Slowhttptest,test,2017-07-05 10:34:00,2017-07-05 10:37:00,76
+wednesday,DoS Hulk,train,2017-07-05 10:43:00,2017-07-05 10:54:00,121616
+wednesday,DoS Hulk,val,2017-07-05 10:56:00,2017-07-05 10:57:00,17824
+wednesday,DoS Hulk,test,2017-07-05 10:59:00,2017-07-05 11:07:00,14088
+wednesday,DoS GoldenEye,train,2017-07-05 11:10:00,2017-07-05 11:17:00,7490
+wednesday,DoS GoldenEye,val,2017-07-05 11:18:00,2017-07-05 11:18:00,2016
+wednesday,DoS GoldenEye,test,2017-07-05 11:19:00,2017-07-05 11:19:00,776
+wednesday,BENIGN,val,2017-07-05 14:38:00,2017-07-05 15:29:00,53884
+wednesday,Heartbleed,train,2017-07-05 15:12:00,2017-07-05 15:26:00,8
+wednesday,Heartbleed,val,2017-07-05 15:28:00,2017-07-05 15:28:00,1
+wednesday,Heartbleed,test,2017-07-05 15:30:00,2017-07-05 15:32:00,2
+wednesday,BENIGN,test,2017-07-05 15:31:00,2017-07-05 17:10:00,54843

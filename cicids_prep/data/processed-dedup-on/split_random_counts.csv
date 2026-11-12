@@ -1,0 +1,16 @@
+label,train,val,test,gap,total
+BENIGN,1304085,279446,279448,0,1862979
+DoS Hulk,120883,25903,25904,0,172690
+DDoS,89609,19202,19202,0,128013
+DoS GoldenEye,7197,1542,1543,0,10282
+FTP-Patator,4153,890,890,0,5933
+DoS slowloris,3760,806,806,0,5372
+DoS Slowhttptest,3660,784,784,0,5228
+SSH-Patator,2253,483,483,0,3219
+PortScan,1296,277,278,0,1851
+Web Attack - Brute Force,1029,221,220,0,1470
+Bot,981,210,210,0,1401
+Web Attack - XSS,456,98,98,0,652
+Infiltration,25,6,5,0,36
+Web Attack - Sql Injection,15,3,3,0,21
+Heartbleed,8,2,1,0,11

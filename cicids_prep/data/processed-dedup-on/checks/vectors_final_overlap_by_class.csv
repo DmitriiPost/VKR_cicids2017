@@ -1,0 +1,61 @@
+protocol,kind,class,n_test,with_twin_in_train_capped,share_%,same_label
+time,exact,BENIGN,274385,0,0.0,0
+time,exact,Bot,204,0,0.0,0
+time,exact,DDoS,14045,0,0.0,0
+time,exact,DoS GoldenEye,776,0,0.0,0
+time,exact,DoS Hulk,14088,0,0.0,0
+time,exact,DoS Slowhttptest,76,0,0.0,0
+time,exact,DoS slowloris,705,0,0.0,0
+time,exact,FTP-Patator,787,0,0.0,0
+time,exact,Heartbleed,2,0,0.0,0
+time,exact,Infiltration,4,0,0.0,0
+time,exact,PortScan,185,0,0.0,0
+time,exact,SSH-Patator,457,0,0.0,0
+time,exact,Web Attack - Brute Force,193,0,0.0,0
+time,exact,Web Attack - Sql Injection,5,0,0.0,0
+time,exact,Web Attack - XSS,54,0,0.0,0
+time,round3,BENIGN,274385,3739,1.36,3713
+time,round3,Bot,204,0,0.0,0
+time,round3,DDoS,14045,1759,12.52,1759
+time,round3,DoS GoldenEye,776,0,0.0,0
+time,round3,DoS Hulk,14088,109,0.77,96
+time,round3,DoS Slowhttptest,76,5,6.58,1
+time,round3,DoS slowloris,705,158,22.41,155
+time,round3,FTP-Patator,787,5,0.64,5
+time,round3,Heartbleed,2,0,0.0,0
+time,round3,Infiltration,4,0,0.0,0
+time,round3,PortScan,185,0,0.0,0
+time,round3,SSH-Patator,457,0,0.0,0
+time,round3,Web Attack - Brute Force,193,40,20.73,32
+time,round3,Web Attack - Sql Injection,5,0,0.0,0
+time,round3,Web Attack - XSS,54,10,18.52,3
+random,exact,BENIGN,279448,0,0.0,0
+random,exact,Bot,210,0,0.0,0
+random,exact,DDoS,19202,0,0.0,0
+random,exact,DoS GoldenEye,1543,0,0.0,0
+random,exact,DoS Hulk,25904,0,0.0,0
+random,exact,DoS Slowhttptest,784,0,0.0,0
+random,exact,DoS slowloris,806,0,0.0,0
+random,exact,FTP-Patator,890,0,0.0,0
+random,exact,Heartbleed,1,0,0.0,0
+random,exact,Infiltration,5,0,0.0,0
+random,exact,PortScan,278,0,0.0,0
+random,exact,SSH-Patator,483,0,0.0,0
+random,exact,Web Attack - Brute Force,220,0,0.0,0
+random,exact,Web Attack - Sql Injection,3,0,0.0,0
+random,exact,Web Attack - XSS,98,0,0.0,0
+random,round3,BENIGN,279448,4132,1.48,4111
+random,round3,Bot,210,1,0.48,1
+random,round3,DDoS,19202,1718,8.95,1718
+random,round3,DoS GoldenEye,1543,359,23.27,359
+random,round3,DoS Hulk,25904,313,1.21,311
+random,round3,DoS Slowhttptest,784,500,63.78,498
+random,round3,DoS slowloris,806,332,41.19,332
+random,round3,FTP-Patator,890,6,0.67,6
+random,round3,Heartbleed,1,0,0.0,0
+random,round3,Infiltration,5,0,0.0,0
+random,round3,PortScan,278,14,5.04,14
+random,round3,SSH-Patator,483,1,0.21,1
+random,round3,Web Attack - Brute Force,220,37,16.82,30
+random,round3,Web Attack - Sql Injection,3,0,0.0,0
+random,round3,Web Attack - XSS,98,20,20.41,7
