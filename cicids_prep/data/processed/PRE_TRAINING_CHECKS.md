@@ -1,14 +1,16 @@
 # Проверки перед обучением (CICIDS2017)
 
-Результаты проверок по заданию: (1) совпадающие векторы между выборками, (2) пересечения временных интервалов в протоколе C, (3) зачем ограничение 20 000 на класс, (4) Bot и SSH-Patator вне окон атак, (5) Random Forest на 5 сидах. Таблицы лежат в `processed/checks/*.csv`, код — `06_check_overlaps.py`, `07_bot_ssh_windows.py`, `08_rf_seeds.py` (общая предобработка в `prep_common.py`). Проверки выполнены в двух вариантах: базовом (дубликаты и конфликты по всем колонкам, `data/processed`) и с `--dedup-on model` (по признакам модели, `data/processed-dedup-on`, см. §6).
+Здесь и далее «протокол C» — stratified temporal split (`03_make_splits.py --protocol time`). Эксперименты с `Destination Port` (с портом и без порта, разбиение PortScan по портам) вынесены в `PORT_EXPERIMENTS.md`.
+
+Результаты проверок по заданию: (1) совпадающие векторы между выборками, (2) пересечения временных интервалов в протоколе C, (3) зачем ограничение 20 000 на класс, (4) Bot и SSH-Patator вне окон атак, (5) Random Forest на 5 сидах. Таблицы лежат в `data/processed/checks/*.csv`, код — `06_check_overlaps.py`, `07_bot_ssh_windows.py`, `08_rf_seeds.py` (общая предобработка в `prep_common.py`). Проверки выполнены в двух вариантах: базовом (дубликаты и конфликты по всем колонкам, `data/processed`) и с `--dedup-on model` (по признакам модели, `data/processed-dedup-on`, см. §6). Повторный запуск дал те же таблицы до последнего знака.
 
 Random Forest везде: 60 деревьев, `class_weight="balanced_subsample"`, предобработка по train, метрики на test в естественном распределении. «macro-F1 (≥50)» — среднее F1 по классам, у которых в test не менее 50 потоков; это устойчивая метрика, потому что у Heartbleed, SQL-инъекций и Infiltration в test 2–5 потоков и их F1 сильно скачет.
 
 ## Главное
 
-1. После удаления `Destination Port` и масштабирования у части потоков появляются **точные копии между train и test** (PortScan 95.6% тестовых потоков на C), хотя по сырым признакам совпадений нет. Причина: дубликаты искались вместе с портом, а модель его не видит. Это завышает оценку PortScan (F1 0.911 → 0.134 при честной дедупликации).
+1. После удаления `Destination Port` и масштабирования у части потоков появляются **точные копии между train и test** (PortScan 95.6% тестовых потоков на C), хотя по сырым признакам совпадений нет. Причина: дубликаты искались вместе с портом, а модель его не видит. Это завышает оценку PortScan (F1 0.911 → 0.134 после дедупликации по признакам модели).
 2. В протоколе C блоки атак не пересекаются по времени между train, val и test, но **43.5% атак test и 75.7% атак val идут в те же минуты, что и benign-потоки train** (структурное свойство разбиения).
-3. Ограничение 20 000 на класс экономит вычисления и балансирует классы; по RF оно стоит порядка 0.04 macro-F1 относительно 60 000, дальше выигрыша нет.
+3. Ограничение 20 000 на класс принято как рабочее значение для первых прогонов: оно экономит вычисления и балансирует классы. По RF macro-F1 растёт примерно до 60 000 и дальше не меняется; окончательный выбор значения откладываем до прогона SCN.
 4. **Все тестовые потоки Bot (287) и SSH-Patator (457) в протоколе C лежат вне официальных окон** атак; поэтому F1 Bot = 0. Это хвосты атак, а не явные ошибки разметки.
 5. На 5 сидах: A — macro-F1 0.805 ± 0.043, C — 0.666 ± 0.028 (по классам ≥50: 0.866 и 0.673).
 6. Дедупликация по признакам модели (`--dedup-on model`) убирает точные копии между train и test (на C: 0 против 15 040 потоков), но F1 PortScan на C падает до 0.134, а macro-F1 на C до 0.648 (на A до 0.789); подробности в §6.
@@ -57,7 +59,7 @@ PortScan: потоки отличаются только портом, кото�
 
 Влияние на Random Forest (5 сидов): C — F1 PortScan **0.911 → 0.134**, macro-F1 0.666 → 0.648, accuracy 0.981 → 0.977; A — macro-F1 0.805 → 0.789, accuracy 0.9957 → 0.9951. Значит высокая оценка PortScan в базовых прогонах в основном запоминание копий.
 
-## 2. Пересечения временных интервалов (протокол C, без учёта классов)
+## 2. Пересечения временных интервалов (протокол C — stratified temporal split, без учёта классов)
 
 Минутные корзины, все потоки каждого сплита независимо от класса (`checks/time_overlap_minutes.csv`):
 
@@ -87,14 +89,14 @@ PortScan: потоки отличаются только портом, кото�
 | Ограничение на класс | Строк в train | macro-F1 (все классы) | macro-F1 (≥50) | accuracy |
 |---|---:|---:|---:|---:|
 | 5 000 | 42 179 | 0.597 ± 0.005 | 0.606 ± 0.017 | 0.967 |
-| **20 000 (используется)** | 104 673 | 0.651 ± 0.025 | 0.672 ± 0.005 | 0.979 |
+| 20 000 (рабочее значение) | 104 673 | 0.651 ± 0.025 | 0.672 ± 0.005 | 0.979 |
 | 60 000 | 264 673 | 0.691 ± 0.018 | 0.700 ± 0.016 | 0.981 |
 | 200 000 | 497 111 | 0.686 ± 0.005 | 0.699 ± 0.007 | 0.971 |
 | нет ограничения* | 1 763 165 | 0.674 | 0.706 | 0.970 |
 
-Время обучения RF: 6 с, 13 с, 31 с, 67 с для 5 000 … 200 000. Вывод: выигрыш от увеличения быстро насыщается (около 60 000); для SCN, где стоимость растёт с числом строк, 20 000 — разумный компромисс, 60 000 можно взять, если вычислений хватает. Различия между 60 000, 200 000 и «нет» лежат в пределах разброса по сидам.
+\* один сид и 30 деревьев (из-за памяти), поэтому сравнение приблизительное. Время обучения RF: 6 с, 13 с, 31 с, 67 с для 5 000 … 200 000. Вывод: выигрыш от увеличения быстро насыщается (около 60 000); для SCN стоимость растёт с числом строк, поэтому значение ограничения выберем после прогона SCN (в том числе без ограничения, если хватит вычислений); 20 000 пока рабочее значение. Различия между 60 000, 200 000 и «нет» лежат в пределах разброса по сидам.
 
-
+Прогоны с разным ограничением на класс (таблица выше) выполнены только в моей среде; в результатах повторного запуска (`checks/`) их нет. Отдельное сравнение «20 000 / без ограничения» (с портом и без порта, 30 деревьев, 3 сида) есть в `PORT_EXPERIMENTS.md`.
 
 ## 4. Bot и SSH-Patator вне окон атак
 
@@ -116,7 +118,7 @@ PortScan: потоки отличаются только портом, кото�
 | SSH-Patator: вне окна / всего | 0 / 2 274 | 0 / 394 | **457 / 457 (100%)** |
 | Bot: вне окна / всего | 2 / 1 375 | 198 / 282 (70%) | **287 / 287 (100%)** |
 
-Поэтому при блочном разбиении модель обучается только на потоках внутри окна, а проверяется только на хвостах — отсюда F1 Bot = 0.
+Поэтому в протоколе C модель обучается только на потоках внутри окна, а проверяется только на хвостах — отсюда F1 Bot = 0.
 
 **Эксперимент: удалить подозрительные потоки** (список 1 398 потоков, `--exclude-flow-ids` в `03_make_splits.py`, затем разбиение C заново; 5 сидов):
 
@@ -129,7 +131,7 @@ PortScan: потоки отличаются только портом, кото�
 | accuracy | 0.981 ± 0.007 | 0.985 ± 0.003 |
 | Потоков в test у Bot / SSH | 287 / 457 | ~134 / 343 |
 
-Остальные классы практически не меняются. Оговорки: тест другой (меньше Bot и SSH), поэтому это не сравнение на тех же потоках; и удаление не доказывает, что метки неверны — выглядит скорее как реальные хвосты, а не ошибки. **Пока по умолчанию такие потоки остаются в данных**, результат с удалением приводится как справочный.
+Остальные классы практически не меняются. Оговорки: тест другой (меньше Bot и SSH), поэтому это не сравнение на тех же потоках; и удаление не доказывает, что метки неверны — выглядит скорее как реальные хвосты, а не ошибки. **По умолчанию такие потоки остаются в данных** (ваше решение), результат с удалением приводится как справочный.
 
 ## 5. Random Forest на 5 сидах (0–4)
 
@@ -218,27 +220,27 @@ F1 по классам (среднее по 5 сидам, в скобках ст
 - **Остальные классы** меняются слабо (в пределах разброса по сидам), кроме небольшого падения DDoS и SSH на C. Общий macro-F1 снижается на 0.016–0.018 на обоих протоколах; на C сильное падение PortScan (−0.78) почти компенсируется ростом Bot (+0.50), поэтому общий показатель меняется мало.
 - **Тест стал меньше** (305 966 потоков на C против 347 963; PortScan 185 против 8 359), поэтому сравнивать числа «базовый / dedup-on» можно только как оценки двух разных тестовых наборов.
 
-## Предложения
+## Что предлагаю изменить в протоколе и что решить
 
 - **Дедупликация по признакам модели** (`--dedup-on model`) стоит сделать основной, иначе оценка PortScan завышена; результаты обоих вариантов приведены в §6 и в `DATA_PREPARATION.md` (§6). В коде по умолчанию она выключена, решение за вами и преподавателем.
-- **Bot и SSH вне окон:** оставить в данных и показывать результаты в двух вариантах — с ними и без них.
-- **Протокол C:** честно описывать, что benign-потоки train пересекаются по времени с атаками val и test (§2).
+- **Bot и SSH вне окон:** оставить в данных (как решено) и показывать результаты в двух вариантах — с ними и без них.
+- **Протокол C:** при описании указывать, что benign-потоки train пересекаются по времени с атаками val и test (§2).
 - **Метрики:** в отчётах приводить macro-F1 по классам с ≥50 потоков и F1 по классам, а не только accuracy и общий macro-F1.
-- **Ограничение на класс:** 20 000 оставить для SCN; для сравнения с RF можно привести 60 000.
+- **Ограничение на класс:** окончательное значение выбрать после прогона SCN; пока 20 000 как рабочее, для сравнения приводить также 60 000 и вариант без ограничения.
 
 ## Как воспроизвести
 
 ```
-python 06_check_overlaps.py --clean processed/clean.parquet --processed processed --outdir processed/checks
-python 07_bot_ssh_windows.py --clean processed/clean.parquet --split processed/split_time.parquet --outdir processed/checks \
-       --tol-min 0 --exclude-out processed/checks/exclude_bot_ssh_tol0.parquet
-python 03_make_splits.py --clean processed/clean.parquet --protocol time --exclude-flow-ids processed/checks/exclude_bot_ssh_tol0.parquet \
-       --out processed/split_time_excl_botssh.parquet
-python 03_make_splits.py --clean processed/clean.parquet --protocol time   --dedup-on model --out processed/split_time_dedupmodel.parquet
-python 03_make_splits.py --clean processed/clean.parquet --protocol random --dedup-on model --out processed/split_random_dedupmodel.parquet
-python 08_rf_seeds.py --clean processed/clean.parquet --protocol time   --split processed/split_time.parquet --tag time_base --outdir processed/checks
-python 08_rf_seeds.py --clean processed/clean.parquet --protocol random --tag random_base --outdir processed/checks
-python 08_rf_seeds.py --clean processed/clean.parquet --protocol time --split processed/split_time.parquet --tag time_cap60000 --cap 60000 --seeds 0 1 2 --outdir processed/checks
+python 06_check_overlaps.py --clean data/processed/clean.parquet --processed data/processed --outdir data/processed/checks
+python 07_bot_ssh_windows.py --clean data/processed/clean.parquet --split data/processed/split_time.parquet --outdir data/processed/checks \
+       --tol-min 0 --exclude-out data/processed/checks/exclude_bot_ssh_tol0.parquet
+python 03_make_splits.py --clean data/processed/clean.parquet --protocol time --exclude-flow-ids data/processed/checks/exclude_bot_ssh_tol0.parquet \
+       --out data/processed/split_time_excl_botssh.parquet
+python 03_make_splits.py --clean data/processed/clean.parquet --protocol time   --dedup-on model --out data/processed/split_time_dedupmodel.parquet
+python 03_make_splits.py --clean data/processed/clean.parquet --protocol random --dedup-on model --out data/processed/split_random_dedupmodel.parquet
+python 08_rf_seeds.py --clean data/processed/clean.parquet --protocol time   --split data/processed/split_time.parquet --tag time_base --outdir data/processed/checks
+python 08_rf_seeds.py --clean data/processed/clean.parquet --protocol random --tag random_base --outdir data/processed/checks
+python 08_rf_seeds.py --clean data/processed/clean.parquet --protocol time --split data/processed/split_time.parquet --tag time_cap60000 --cap 60000 --seeds 0 1 2 --outdir data/processed/checks
 ```
 
-Для прогонов с дедупликацией по признакам модели и без Bot/SSH: `--split processed/split_time_dedupmodel.parquet` / `split_time_excl_botssh.parquet` (для random: `--dedup-on model`).
+Для прогонов с дедупликацией по признакам модели и без Bot/SSH: `--split data/processed/split_time_dedupmodel.parquet` / `split_time_excl_botssh.parquet` (для random: `--dedup-on model`).
